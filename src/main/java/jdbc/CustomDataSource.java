@@ -29,9 +29,10 @@ public class CustomDataSource implements DataSource {
 
     public static CustomDataSource getInstance(){
         if (instance == null) {
-            instance = new CustomDataSource();
+            synchronized (CustomDataSource.instance) {
+                instance = new CustomDataSource();
+            }
         }
-        return instance;
     }
 
     @Override
