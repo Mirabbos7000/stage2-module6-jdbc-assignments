@@ -1,16 +1,17 @@
 package jdbc;
 
-import javax.sql.DataSource;
-
-import lombok.Getter;
-import lombok.Setter;
-
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.logging.Logger;
+
+import javax.sql.DataSource;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -21,32 +22,27 @@ public class CustomDataSource implements DataSource {
     private final String name;
     private final String password;
 
-    private CustomDataSource(String driver, String url, String password, String name) throws Exception {
-        this.password = password;
+    private CustomDataSource(String driver, String url, String password, String name) {
         this.driver = driver;
-        this.name = name;
         this.url = url;
-        try{
-            Class.forName(driver);
-        }catch (Exception e){
-            throw new Exception("Failed to load JDBC");
-        }
+        this.name = name;
+        this.password = password;
     }
 
-    public static CustomDataSource getInstance() throws Exception {
+    public static CustomDataSource getInstance() {
         if (instance == null) {
             synchronized (CustomDataSource.class) {
-                if(instance == null){
-                    Properties properties = new Properties();
+                if (instance == null) {
+                    Properties props = new Properties();
                     try {
-                        properties.load(CustomDataSource.class.getClassLoader().getResourceAsStream("app.properties"));
-                        String driver = properties.getProperty("postgres.driver");
-                        String url = properties.getProperty("postgres.url");
-                        String password = properties.getProperty("postgres.password");
-                        String name = properties.getProperty("postgres.name");
+                        props.load(CustomDataSource.class.getClassLoader().getResourceAsStream("app.properties"));
+                        String driver = props.getProperty("postgres.driver");
+                        String url = props.getProperty("postgres.url");
+                        String name = props.getProperty("postgres.password");
+                        String password = props.getProperty("postgres.name");
                         instance = new CustomDataSource(driver, url, password, name);
-                        Class.forName(properties.getProperty("postgres.driver"));
-                    }catch (Exception e){
+                        Class.forName(props.getProperty("postgres.driver"));
+                    } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
                 }
@@ -56,47 +52,48 @@ public class CustomDataSource implements DataSource {
     }
 
     @Override
-    public Connection getConnection() throws SQLException {
-        return null;
+    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+        throw new UnsupportedOperationException("Unimplemented method 'getParentLogger'");
     }
 
     @Override
-    public Connection getConnection(String username, String password) throws SQLException {
-        return null;
+    public boolean isWrapperFor(Class<?> arg0) throws SQLException {
+        throw new UnsupportedOperationException("Unimplemented method 'isWrapperFor'");
+    }
+
+    @Override
+    public <T> T unwrap(Class<T> arg0) throws SQLException {
+        throw new UnsupportedOperationException("Unimplemented method 'unwrap'");
+    }
+
+    @Override
+    public Connection getConnection() throws SQLException {
+        return new CustomConnector().getConnection(url, name, password);
+    }
+
+    @Override
+    public Connection getConnection(String arg0, String arg1) throws SQLException {
+        return new CustomConnector().getConnection(url, name, password);
     }
 
     @Override
     public PrintWriter getLogWriter() throws SQLException {
-        return null;
-    }
-
-    @Override
-    public void setLogWriter(PrintWriter out) throws SQLException {
-        System.out.println("NOT SUPPORTED");
-    }
-
-    @Override
-    public void setLoginTimeout(int seconds) throws SQLException {
-        System.out.println("NOT SUPPORTED");
+        throw new UnsupportedOperationException("Unimplemented method 'getLogWriter'");
     }
 
     @Override
     public int getLoginTimeout() throws SQLException {
-        return 0;
+        throw new UnsupportedOperationException("Unimplemented method 'getLoginTimeout'");
     }
 
     @Override
-    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        return null;
+    public void setLogWriter(PrintWriter arg0) throws SQLException {
+        throw new UnsupportedOperationException("Unimplemented method 'setLogWriter'");
     }
 
     @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
-        throw new SQLException("NOT SUPPORTED");
+    public void setLoginTimeout(int arg0) throws SQLException {
+        throw new UnsupportedOperationException("Unimplemented method 'setLoginTimeout'");
     }
 
-    @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        throw new SQLException("NOT SUPPORTED");
-    }
 }
