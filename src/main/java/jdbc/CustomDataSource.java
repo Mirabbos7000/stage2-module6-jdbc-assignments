@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 @Getter
@@ -20,19 +21,38 @@ public class CustomDataSource implements DataSource {
     private final String name;
     private final String password;
 
-    private CustomDataSource(String driver, String url, String password, String name) {
+    private CustomDataSource(String driver, String url, String password, String name) throws Exception {
         this.password = password;
         this.driver = driver;
         this.name = name;
         this.url = url;
+        try{
+            Class.forName(driver);
+        }catch (Exception e){
+            throw new Exception("Failed to load JDBC");
+        }
     }
 
-    public static CustomDataSource getInstance(){
+    public static CustomDataSource getInstance() throws Exception {
         if (instance == null) {
-            synchronized (CustomDataSource.instance) {
-                instance = new CustomDataSource();
+            synchronized (CustomDataSource.class) {
+                if(instance == null){
+                    Properties properties = new Properties();
+                    try {
+                        properties.load(CustomDataSource.class.getClassLoader().getResourceAsStream("app.properties"));
+                        String driver = properties.getProperty("postgres.driver");
+                        String url = properties.getProperty("postgres.url");
+                        String password = properties.getProperty("postgres.password");
+                        String name = properties.getProperty("postgres.name");
+                        instance = new CustomDataSource(driver, url, password, name);
+                        Class.forName(properties.getProperty("postgres.driver"));
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
             }
         }
+        return instance;
     }
 
     @Override
